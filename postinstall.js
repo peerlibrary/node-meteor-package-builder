@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
   When installing the NPM module, submodules are not initialized automatically.
  */
