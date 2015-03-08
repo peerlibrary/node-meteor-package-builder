@@ -10,17 +10,19 @@ global._ = require('underscore');
 
 var loadModule = function (Npm) {
   var Fiber = Npm.require('fibers');
+  var Future = Npm.require('fibers/future');
   var proxyquire = require('proxyquire').noCallThru();
 
   // Configure proxyquire to globally override fibers.
   Fiber['@global'] = true;
+  Future['@global'] = true;
 
-  var _ = proxyquire('underscore', { fibers: Fiber });
-  var files = proxyquire('./meteor/tools/files.js', { fibers: Fiber });
-  var buildmessage = proxyquire('./meteor/tools/buildmessage.js', { fibers: Fiber });
-  var release = proxyquire('./meteor/tools/release.js', { fibers: Fiber });
-  var utils = proxyquire('./meteor/tools/utils.js', { fibers: Fiber });
-  var projectContextModule = proxyquire('./meteor/tools/project-context.js', { fibers: Fiber });
+  var _ = proxyquire('underscore', { fibers: Fiber, 'fibers/future': Future });
+  var files = proxyquire('./meteor/tools/files.js', { fibers: Fiber, 'fibers/future': Future });
+  var buildmessage = proxyquire('./meteor/tools/buildmessage.js', { fibers: Fiber, 'fibers/future': Future });
+  var release = proxyquire('./meteor/tools/release.js', { fibers: Fiber, 'fibers/future': Future });
+  var utils = proxyquire('./meteor/tools/utils.js', { fibers: Fiber, 'fibers/future': Future });
+  var projectContextModule = proxyquire('./meteor/tools/project-context.js', { fibers: Fiber, 'fibers/future': Future });
 
   var captureAndExit = function (header, title, f) {
     var messages;
