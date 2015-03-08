@@ -22,7 +22,15 @@ var loadModule = function (Npm) {
   var buildmessage = proxyquire('./meteor/tools/buildmessage.js', { fibers: Fiber, 'fibers/future': Future });
   var release = proxyquire('./meteor/tools/release.js', { fibers: Fiber, 'fibers/future': Future });
   var utils = proxyquire('./meteor/tools/utils.js', { fibers: Fiber, 'fibers/future': Future });
+  var catalog = proxyquire('./catalog.js', { fibers: Fiber, 'fibers/future': Future });
   var projectContextModule = proxyquire('./meteor/tools/project-context.js', { fibers: Fiber, 'fibers/future': Future });
+
+  proxyquire('./isopackets.js', { fibers: Fiber, 'fibers/future': Future }).ensureIsopacketsLoadable();
+
+  // Initialize the server catalog.
+  catalog.official.initialize({
+    offline: !!process.env.METEOR_OFFLINE_CATALOG
+  });
 
   var captureAndExit = function (header, title, f) {
     var messages;
