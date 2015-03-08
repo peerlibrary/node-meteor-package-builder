@@ -34,7 +34,7 @@
     "node": ">=0.10.33"
   },
   "scripts": {
-    "postinstall" : "postinstall.js"
+    "postinstall" : "./postinstall.js"
   },
   "license": "BSD-3-Clause",
   "main": "./package-builder.js"
