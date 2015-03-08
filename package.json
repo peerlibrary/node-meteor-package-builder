@@ -26,6 +26,7 @@
     "eachline": "https://github.com/meteor/node-eachline/tarball/ff89722ff94e6b6a08652bf5f44c8fffea8a21da",
     "cordova": "4.2.0",
     "pathwatcher": "4.1.0",
+    "proxyquire": "1.4.0",
     "runsync": "0.1.8"
   },
   "engines": {
