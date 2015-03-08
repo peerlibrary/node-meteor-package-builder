@@ -27,6 +27,9 @@
     "cordova": "4.2.0",
     "pathwatcher": "4.1.0"
   },
+  "devDependencies": {
+    "runsync": "0.1.8"
+  },
   "engines": {
     "node": ">=0.10.33"
   },

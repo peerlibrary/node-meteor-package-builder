@@ -4,11 +4,12 @@
   When installing the NPM module, submodules are not initialized automatically.
  */
 
-var childProcess = require('child_process');
+var runsync = require("runsync");
 
-childProcess.execFileSync('git', ['init']);
-childProcess.execFileSync('git', ['submodule', 'sync']);
-childProcess.execFileSync('git', ['submodule', 'update', '--init', '--recursive']);
+// TODO: Should be replaced with child_process.execFileSync once Meteor moves to node.js 0.12.
+runsync.execFile('git', ['init'], {stdio: 'inherit'});
+runsync.execFile('git', ['submodule', 'sync'], {stdio: 'inherit'});
+runsync.execFile('git', ['submodule', 'update', '--init', '--recursive'], {stdio: 'inherit'});
 
 /*
    package-version-parser tries to load packages from ../../dev_bundle/lib/node_modules
