@@ -3,29 +3,53 @@
 global.SemVer410 = require('semver');
 global._ = require('underscore');
 
-/*
-   This code is taken from commands-packages.js file with everything
-   except the package building/publishing code removed.
- */
+// To make debugging easier.
+Error.stackTraceLimit = Infinity;
 
 var loadModule = function (Npm) {
   var Fiber = Npm.require('fibers');
   var Future = Npm.require('fibers/future');
-  var proxyquire = require('proxyquire').noCallThru();
 
-  // Configure proxyquire to globally override fibers.
-  Fiber['@global'] = true;
-  Future['@global'] = true;
+  var overriddenRequire = function (originalRequire, path) {
+    if (path === 'fibers') {
+      return Fiber;
+    }
+    else if (path === 'fibers/future') {
+      return Future;
+    }
+    else {
+      return originalRequire.call(this, path);
+    }
+  };
 
-  var _ = proxyquire('underscore', { fibers: Fiber, 'fibers/future': Future });
-  var files = proxyquire('./meteor/tools/files.js', { fibers: Fiber, 'fibers/future': Future });
-  var buildmessage = proxyquire('./meteor/tools/buildmessage.js', { fibers: Fiber, 'fibers/future': Future });
-  var release = proxyquire('./meteor/tools/release.js', { fibers: Fiber, 'fibers/future': Future });
-  var utils = proxyquire('./meteor/tools/utils.js', { fibers: Fiber, 'fibers/future': Future });
-  var catalog = proxyquire('./meteor/tools/catalog.js', { fibers: Fiber, 'fibers/future': Future });
-  var projectContextModule = proxyquire('./meteor/tools/project-context.js', { fibers: Fiber, 'fibers/future': Future });
+  var overrideExtensionHandlers = function () {
+    Object.keys(require.extensions).forEach(function (extension) {
+      var originalExtension = require.extensions[extension];
 
-  proxyquire('./meteor/tools/isopackets.js', { fibers: Fiber, 'fibers/future': Future }).ensureIsopacketsLoadable();
+      require.extensions[extension] = function (module, filename) {
+        module.require = overriddenRequire.bind(module, module.require);
+
+        return originalExtension(module, filename);
+      };
+    });
+  };
+
+  overrideExtensionHandlers();
+
+  /*
+     The following code is taken from commands-packages.js file with everything
+     except the package building/publishing code removed.
+   */
+
+  var _ = require('underscore');
+  var files = require('./meteor/tools/files.js');
+  var buildmessage = require('./meteor/tools/buildmessage.js');
+  var release = require('./meteor/tools/release.js');
+  var utils = require('./meteor/tools/utils.js');
+  var catalog = require('./meteor/tools/catalog.js');
+  var projectContextModule = require('./meteor/tools/project-context.js');
+
+  require('./meteor/tools/isopackets.js').ensureIsopacketsLoadable();
 
   // Initialize the server catalog.
   catalog.official.initialize({
