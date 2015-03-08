@@ -32,6 +32,10 @@ var Console = require('./meteor/tools/console.js').Console;
 var projectContextModule = require('./meteor/tools/project-context.js');
 
 function buildPackage(options, publishPackage) {
+  if (options.release) {
+    options.releaseForConstraints = release.load(options.release);
+  }
+
   var projectContext;
   // We're not in an app? OK, make a temporary app directory, and make sure
   // that the current package directory is found by its local catalog.
