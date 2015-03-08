@@ -1,3 +1,8 @@
+// When used as a Meteor package, package-version-parser detects
+// Package and believes SemVer410 and _ are available globally.
+global.SemVer410 = require('./meteor/dev_bundle/lib/node_modules/semver');
+global._ = require('underscore');
+
 /*
    This code is taken from commands-packages.js file with everything
    except the package building/publishing code removed.
@@ -22,7 +27,6 @@ var compiler = require('./meteor/tools/compiler.js');
 var catalog = require('./meteor/tools/catalog.js');
 var stats = require('./meteor/tools/stats.js');
 var isopack = require('./meteor/tools/isopack.js');
-var updater = require('./meteor/tools/updater.js');
 var cordova = require('./meteor/tools/commands-cordova.js');
 var Console = require('./meteor/tools/console.js').Console;
 var projectContextModule = require('./meteor/tools/project-context.js');
