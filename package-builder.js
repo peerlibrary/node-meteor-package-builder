@@ -8,15 +8,26 @@ global._ = require('underscore');
    except the package building/publishing code removed.
  */
 
-var main = require('./meteor/tools/main.js');
 var _ = require('underscore');
 var files = require('./meteor/tools/files.js');
+var buildmessage = require('./meteor/tools/buildmessage.js');
 var release = require('./meteor/tools/release.js');
 var utils = require('./meteor/tools/utils.js');
-var Console = require('./meteor/tools/console.js').Console;
 var projectContextModule = require('./meteor/tools/project-context.js');
 
-function buildPackage(options, publishPackage) {
+var captureAndExit = function (header, title, f) {
+  var messages;
+  if (f) {
+    messages = buildmessage.capture({ title: title }, f);
+  } else {
+    messages = buildmessage.capture(title);  // title is really f
+  }
+  if (messages.hasMessages()) {
+    throw new Error(header + "\n" + messages.formatMessages());
+  }
+};
+
+var buildPackage = function (options, publishPackage) {
   if (options.release) {
     options.releaseForConstraints = release.load(options.release);
   }
@@ -37,7 +48,7 @@ function buildPackage(options, publishPackage) {
     forceIncludeCordovaUnibuild: true
   }, options));
 
-  main.captureAndExit("=> Errors while initializing project:", function () {
+  captureAndExit("=> Errors while initializing project:", function () {
     // Just get up to initializing the catalog. We're going to mutate the
     // constraints file a bit before we prepare the build.
     projectContext.initializeCatalog();
@@ -51,12 +62,11 @@ function buildPackage(options, publishPackage) {
     // the package is not on the app's search path (ie, it's probably not
     // directly inside the app's packages directory).  That's kind of
     // weird. Let's not allow this.
-    Console.error(
+    throw new Error(
       "The package you are in appears to be inside a Meteor app but is not " +
        "in its packages directory. You may only publish packages that are " +
        "entirely outside of a project or that are loaded by the project " +
        "that they are inside.");
-    return 1;
   }
   var packageName = localVersionRecord.packageName;
   var packageSource = projectContext.localCatalog.getPackageSource(packageName);
@@ -65,9 +75,8 @@ function buildPackage(options, publishPackage) {
 
   // Anything published to the server must explicitly set a version.
   if (! packageSource.versionExplicitlyProvided) {
-    Console.error("A version must be specified for the package. Set it with " +
+    throw new Error("A version must be specified for the package. Set it with " +
                   "Package.describe.");
-    return 1;
   }
 
   // Make sure that both the package and its test (if any) are actually built.
@@ -82,7 +91,7 @@ function buildPackage(options, publishPackage) {
   });
 
   // Now resolve constraints and build packages.
-  main.captureAndExit("=> Errors while initializing project:", function () {
+  captureAndExit("=> Errors while initializing project:", function () {
     projectContext.prepareProjectForBuild();
   });
   // We don't display the package map delta here, because it includes adding the
@@ -98,21 +107,12 @@ function buildPackage(options, publishPackage) {
 
   // We have initialized everything, so perform the publish operation.
   var binary = isopack.platformSpecific();
-  main.captureAndExit(
-    "=> Errors while publishing:",
-    "publishing the package",
-    function () {
-      publishPackage({
-        projectContext: projectContext,
-        packageSource: packageSource,
-        binary: binary
-      });
-    });
 
-  Console.info('Published ' + packageName + '@' + localVersionRecord.version +
-               '.');
-
-  return 0;
-}
+  publishPackage({
+    projectContext: projectContext,
+    packageSource: packageSource,
+    binary: binary
+  });
+};
 
 module.exports = buildPackage;
