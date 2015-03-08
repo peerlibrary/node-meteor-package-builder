@@ -8,7 +8,8 @@ global._ = require('underscore');
    except the package building/publishing code removed.
  */
 
-var loadModule = function (Fiber) {
+var loadModule = function (Npm) {
+  var Fiber = Npm.require('fibers');
   var proxyquire = require('proxyquire').noCallThru();
 
   // Configure proxyquire to globally override fibers.
