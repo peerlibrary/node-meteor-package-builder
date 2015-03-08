@@ -1,6 +1,6 @@
 // When used as a Meteor package, package-version-parser detects
 // Package and believes SemVer410 and _ are available globally.
-global.SemVer410 = require('./meteor/dev_bundle/lib/node_modules/semver');
+global.SemVer410 = require('semver');
 global._ = require('underscore');
 
 /*
