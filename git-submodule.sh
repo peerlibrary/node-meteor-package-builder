@@ -10,5 +10,5 @@ git config -f .gitmodules --get-regexp '^submodule\..*\.path$' |
         url_key=$(echo $path_key | sed 's/\.path/.url/')
         url=$(git config -f .gitmodules --get "$url_key")
         rm -rf $path
-        git submodule add $url $path
+        git submodule add -b master $url $path
     done
