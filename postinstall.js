@@ -9,13 +9,7 @@ var runsync = require("runsync");
 // TODO: Should be replaced with child_process.execFileSync once Meteor moves to node.js 0.12.
 runsync.execFile('git', ['init'], {stdio: 'inherit'});
 runsync.execFile('git', ['remote', 'add', 'origin', 'https://github.com/peerlibrary/node-meteor-package-builder.git'], {stdio: 'inherit'});
-try {
-  // This commands fails because it cannot merge (there are files it would have to override),
-  // but we still need it for checkout later on to work as expected.
-  runsync.execFile('git', ['pull', 'origin', 'master'], {stdio: 'inherit'});
-}
-catch (e) {}
-// Merge from the pull failed, but we do not really care, because we want fails to be overridden. Override now.
+runsync.execFile('git', ['pull', 'origin', 'master'], {stdio: 'inherit'});
 runsync.execFile('git', ['checkout', '-f', 'master'], {stdio: 'inherit'});
 runsync.execFile('git', ['submodule', 'sync'], {stdio: 'inherit'});
 runsync.execFile('git', ['submodule', 'update', '--init', '--recursive'], {stdio: 'inherit'});
