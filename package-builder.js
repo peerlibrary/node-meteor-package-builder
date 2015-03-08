@@ -36,7 +36,7 @@ var loadModule = function (Npm) {
     }
   };
 
-  var buildPackage = function (options, publishPackage) {
+  var buildPackage = function (options) {
     if (options.release) {
       options.releaseForConstraints = release.load(options.release);
     }
@@ -117,11 +117,11 @@ var loadModule = function (Npm) {
     // We have initialized everything, so perform the publish operation.
     var binary = isopack.platformSpecific();
 
-    publishPackage({
+    return {
       projectContext: projectContext,
       packageSource: packageSource,
       binary: binary
-    });
+    }
   };
 
   return buildPackage;
