@@ -8,9 +8,7 @@ var runsync = require("runsync");
 
 // TODO: Should be replaced with child_process.execFileSync once Meteor moves to node.js 0.12.
 runsync.execFile('git', ['init'], {stdio: 'inherit'});
-runsync.execFile('git', ['remote', 'add', 'origin', 'https://github.com/peerlibrary/node-meteor-package-builder.git'], {stdio: 'inherit'});
-runsync.execFile('git', ['pull', 'origin', 'master'], {stdio: 'inherit'});
-runsync.execFile('git', ['checkout', '-f', 'master'], {stdio: 'inherit'});
+runsync.execFile('./git-submodule.sh', {stdio: 'inherit'});
 runsync.execFile('git', ['submodule', 'sync'], {stdio: 'inherit'});
 runsync.execFile('git', ['submodule', 'update', '--init', '--recursive'], {stdio: 'inherit'});
 
