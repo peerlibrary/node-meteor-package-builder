@@ -1,12 +1,7 @@
-// When used as a Meteor package, package-version-parser detects
-// Package and believes SemVer410 and _ are available globally.
-global.SemVer410 = require('semver');
-global._ = require('underscore');
-
 // To make debugging easier.
 Error.stackTraceLimit = Infinity;
 
-var loadModule = function (Npm) {
+var loadModule = function (Npm, PackageVersion) {
   var Fiber = Npm.require('fibers');
   var Future = Npm.require('fibers/future');
 
@@ -16,6 +11,9 @@ var loadModule = function (Npm) {
     }
     else if (path === 'fibers/future') {
       return Future;
+    }
+    else if (path === './package-version-parser.js') {
+      return PackageVersion;
     }
     else {
       return originalRequire.call(this, path);
