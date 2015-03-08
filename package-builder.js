@@ -11,6 +11,9 @@ global._ = require('underscore');
 var loadModule = function (Fiber) {
   var proxyquire = require('proxyquire').noCallThru();
 
+  // Configure proxyquire to globally override fibers.
+  Fiber['@global'] = true;
+
   var _ = proxyquire('underscore', { fibers: Fiber });
   var files = proxyquire('./meteor/tools/files.js', { fibers: Fiber });
   var buildmessage = proxyquire('./meteor/tools/buildmessage.js', { fibers: Fiber });
