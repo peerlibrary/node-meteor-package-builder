@@ -2,7 +2,6 @@
   "name": "meteor-package-builder",
   "version": "0.1.0",
   "dependencies": {
-    "pathwatcher": "4.1.0",
     "runsync": "0.1.8"
   },
   "engines": {
