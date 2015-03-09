@@ -16,4 +16,4 @@ runsync.execFile('git', ['submodule', 'update', '--init', '--recursive'], {stdio
   Install a dependency kit.
  */
 
-runsync.execFile('./meteor/meteor', ['--get-ready'], {stdio: 'inherit'});
+runsync.execFile('./meteor/meteor', ['--get-ready']);
