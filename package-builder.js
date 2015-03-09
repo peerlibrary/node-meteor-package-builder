@@ -126,7 +126,7 @@ var loadModule = function (Npm, PackageVersion) {
       if (projectContext.projectConstraintsFile.getConstraint(name))
         return;
       projectContext.projectConstraintsFile.addConstraints(
-        [utils.parsePackageConstraint(name)]);
+        [utils.parseConstraint(name)]);
     });
 
     // Now resolve constraints and build packages.
