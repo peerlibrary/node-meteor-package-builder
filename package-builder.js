@@ -110,7 +110,7 @@ var loadModule = function (Npm, PackageVersion) {
     var packageName = localVersionRecord.packageName;
     var packageSource = projectContext.localCatalog.getPackageSource(packageName);
     if (! packageSource)
-      throw Error("no PackageSource for " + packageName);
+      throw new Error("no PackageSource for " + packageName);
 
     // Anything published to the server must explicitly set a version.
     if (! packageSource.versionExplicitlyProvided) {
@@ -141,7 +141,7 @@ var loadModule = function (Npm, PackageVersion) {
       // This shouldn't happen; we already threw a different error if the package
       // wasn't even in the local catalog, and we explicitly added this package to
       // the project's constraints file, so it should have been built.
-      throw Error("package not built even though added to constraints?");
+      throw new Error("package not built even though added to constraints?");
     }
 
     // We have initialized everything, so perform the publish operation.
