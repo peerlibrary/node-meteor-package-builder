@@ -39,7 +39,7 @@ var loadModule = function (Npm, PackageVersion) {
      except the package building/publishing code removed.
    */
 
-  var _ = require('underscore');
+  var _ = Npm.require('underscore');
   var files = require('./meteor/tools/files.js');
   var buildmessage = require('./meteor/tools/buildmessage.js');
   var release = require('./meteor/tools/release.js');
