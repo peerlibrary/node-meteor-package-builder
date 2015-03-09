@@ -46,6 +46,7 @@ var loadModule = function (Npm, PackageVersion) {
   var utils = require('./meteor/tools/utils.js');
   var catalog = require('./meteor/tools/catalog.js');
   var projectContextModule = require('./meteor/tools/project-context.js');
+  var compiler = require('./meteor/tools/compiler.js');
 
   require('./meteor/tools/isopackets.js').ensureIsopacketsLoadable();
 
@@ -67,6 +68,13 @@ var loadModule = function (Npm, PackageVersion) {
   };
 
   var buildPackage = function (options) {
+    if (_.has(options, 'offline')) {
+      catalog.official.offline = options.offline;
+    }
+    else {
+      catalog.official.offline = !!process.env.METEOR_OFFLINE_CATALOG;
+    }
+
     if (options.release) {
       options.releaseForConstraints = release.load(options.release);
     }
@@ -130,28 +138,132 @@ var loadModule = function (Npm, PackageVersion) {
     });
 
     // Now resolve constraints and build packages.
-    captureAndExit("=> Errors while initializing project:", function () {
+    captureAndExit("=> Errors while building the package:", function () {
       projectContext.prepareProjectForBuild();
     });
     // We don't display the package map delta here, because it includes adding the
     // package's test and all the test's dependencies.
 
-    var isopack = projectContext.isopackCache.getIsopack(packageName);
-    if (! isopack) {
-      // This shouldn't happen; we already threw a different error if the package
-      // wasn't even in the local catalog, and we explicitly added this package to
-      // the project's constraints file, so it should have been built.
-      throw new Error("package not built even though added to constraints?");
-    }
-
-    // We have initialized everything, so perform the publish operation.
-    var binary = isopack.platformSpecific();
-
-    return {
+    var result = {
       projectContext: projectContext,
-      packageSource: packageSource,
-      binary: binary
-    }
+      packageSource: packageSource
+    };
+
+    /*
+       The following code is taken from package-client.js file's publishPackage
+       function.
+     */
+
+    captureAndExit("=> Errors while finalizing the package:", "finalizing the package", function () {
+      buildmessage.assertInJob();
+
+      var name = packageSource.name;
+      var version = packageSource.version;
+
+      // Check that the package name is valid.
+      utils.validatePackageName(name, { useBuildmessage: true });
+      if (buildmessage.jobHasMessages())
+        return;
+
+      // Check that we have a version.
+      if (!version) {
+        buildmessage.error(
+          "Package cannot be finalized because it doesn't have a version");
+        return;
+      }
+
+      // Check that the package does not have any unconstrained references.
+      var packageDeps = packageSource.getDependencyMetadata();
+      _.each(packageDeps, function (refs, label) {
+        if (refs.constraint == null) {
+          if (packageSource.isCore && files.inCheckout() &&
+            projectContext.localCatalog.getPackage(label)) {
+            // Core package is using or implying another core package,
+            // without a version number.  We fill in the version number.
+            // (Well, we're assuming that the other package is core and
+            // not some other sort of local package.)
+            var versionString =
+              projectContext.localCatalog.getLatestVersion(label).version;
+            // modify the constraint on this dep that will be sent to troposphere
+            refs.constraint = versionString;
+          } else if (label === "meteor") {
+            // HACK: We are willing to publish a package with a "null"
+            // constraint on the "meteor" package to troposphere.  This
+            // happens for non-core packages when not running from a
+            // checkout, because all packages implicitly depend on the
+            // "meteor" package, but do not necessarily specify an
+            // explicit version for it, and we don't have a great way to
+            // choose one here.
+            // XXX come back to this, especially if we are incrementing the
+            // major version of "meteor".  hopefully we will have more data
+            // about the package system by then.
+          } else {
+            buildmessage.error(
+                "You must specify a version constraint for package " + label);
+          }
+        }
+      });
+      if (buildmessage.jobHasMessages())
+        return;
+
+      var isopack = projectContext.isopackCache.getIsopack(name);
+      if (!isopack)
+        throw Error("no isopack " + name);
+
+      if (isopack.platformSpecific()) {
+        // TODO: This is unsupported for now.
+        buildmessage.error(
+            "Build is platform specific (contains binary builds).");
+        return;
+      }
+
+      var sourceFiles = isopack.getSourceFilesUnderSourceRoot(
+        packageSource.sourceRoot);
+      if (!sourceFiles)
+        throw Error("isopack doesn't know what its source files are?");
+
+      // We need to have built the test package to get all of its sources, even
+      // though we're not publishing a BUILD for the test package.
+      if (packageSource.testName) {
+        var testIsopack = projectContext.isopackCache.getIsopack(
+          packageSource.testName);
+        if (!testIsopack)
+          throw Error("no testIsopack " + packageSource.testName);
+        var testSourceFiles = testIsopack.getSourceFilesUnderSourceRoot(
+          packageSource.sourceRoot);
+        if (!testSourceFiles)
+          throw Error("test isopack doesn't know what its source files are?");
+        sourceFiles = _.union(sourceFiles, testSourceFiles);
+      }
+
+      var tempDir = files.mkdtemp('build-package-');
+      var packageTarName = isopack.tarballName();
+      var bundleRoot = files.pathJoin(tempDir, packageTarName);
+
+      // Note that we do need to do this even though we already have the isopack on
+      // disk in an IsopackCache, because we don't want to include
+      // isopack-buildinfo.json. (We don't include it because we're not passing
+      // includeIsopackBuildInfo to saveToPath here.)
+      isopack.saveToPath(bundleRoot);
+
+      _.extend(result, {
+        isopack: isopack,
+        sourceFiles: sourceFiles,
+        sourceRoot: packageSource.sourceRoot,
+        compilerVersion: compiler.BUILT_BY,
+        containsPlugins: packageSource.containsPlugins(),
+        debugOnly: packageSource.debugOnly,
+        exports: packageSource.getExports(),
+        releaseName: options.releaseForConstraints && options.releaseForConstraints.name,
+        dependencies: packageDeps,
+        packageName: isopack.name,
+        version: isopack.version,
+        buildArchitectures: isopack.buildArchitectures(),
+        bundleRoot: bundleRoot
+      });
+    });
+
+    return result;
   };
 
   return buildPackage;
