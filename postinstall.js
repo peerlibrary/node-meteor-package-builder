@@ -16,4 +16,5 @@ runsync.execFile('git', ['submodule', 'update', '--init', '--recursive'], {stdio
   Install a dependency kit.
  */
 
-runsync.execFile('./meteor/meteor', ['--get-ready'], {stdio: 'inherit'});
+// Output of this command is potentially huge, so we do not print it out.
+var output = runsync.execFile('./meteor/meteor', ['--get-ready'], {stdio: 'ignore'});
